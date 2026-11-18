@@ -19,6 +19,7 @@ export default function SettingsMenu({
   settings,
   updateSettings,
   onCheckUpdate,
+  appVersion,
 }) {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -225,6 +226,11 @@ export default function SettingsMenu({
                 onPress={onCheckUpdate}
               >
                 <Text style={styles.updateText}>🔄 Перевірити оновлення</Text>
+                {appVersion ? (
+                  <Text style={styles.versionSubText}>
+                    Поточна версія: v{appVersion}
+                  </Text>
+                ) : null}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -253,6 +259,12 @@ export default function SettingsMenu({
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              {appVersion ? (
+                <Text style={styles.aboutVersionBadge}>
+                  Версія додатку: v{appVersion}
+                </Text>
+              ) : null}
+
               <Text style={styles.legalHeading}>
                 1. Законність та незалежний статус
               </Text>
@@ -448,10 +460,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#FFD700",
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 14,
     alignItems: "center",
   },
   updateText: { color: "#FFD700", fontSize: 17, fontWeight: "bold" },
+  versionSubText: {
+    color: "#CBD5E1",
+    fontSize: 13,
+    marginTop: 4,
+  },
   aboutBtn: {
     marginTop: 12,
     marginBottom: 14,
@@ -463,6 +480,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   aboutBtnText: { color: "#E2E8F0", fontSize: 16, fontWeight: "600" },
+  aboutVersionBadge: {
+    color: "#FFD700",
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
   legalHeading: {
     color: "#FFD700",
     fontSize: 16,

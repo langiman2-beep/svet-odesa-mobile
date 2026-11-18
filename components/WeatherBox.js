@@ -42,7 +42,9 @@ export default function WeatherBox({ cityName, weather, loading }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.header}>🌤️ Погода • {cityName}</Text>
+      <Text style={styles.header} numberOfLines={1} adjustsFontSizeToFit>
+        🌤️ Погода • {cityName}
+      </Text>
 
       <View style={styles.tabsRow}>
         {[
@@ -60,6 +62,8 @@ export default function WeatherBox({ cityName, weather, loading }) {
                 styles.tabText,
                 weatherTab === t.key && styles.tabTextActive,
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
               {t.label}
             </Text>
@@ -79,14 +83,18 @@ export default function WeatherBox({ cityName, weather, loading }) {
         <View>
           {currentSlot && (
             <View style={styles.nowBox}>
-              <Text style={styles.nowTemp}>
+              <Text
+                style={styles.nowTemp}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {getWeatherIcon(currentSlot.precipitation, currentSlot.period)}{" "}
                 {currentSlot.temp > 0
                   ? `+${currentSlot.temp}`
                   : currentSlot.temp}
                 °C
               </Text>
-              <View style={{ alignItems: "flex-end" }}>
+              <View style={styles.nowRight}>
                 <Text style={styles.nowPeriod}>{currentSlot.period}</Text>
                 <Text style={styles.nowMeta}>
                   💨 {currentSlot.wind} км/год • 💧 {currentSlot.humidity}% • ☔{" "}
@@ -98,15 +106,37 @@ export default function WeatherBox({ cityName, weather, loading }) {
           <View style={styles.grid}>
             {todayWeather?.periods?.map((p, i) => (
               <View key={i} style={styles.cell}>
-                <Text style={styles.pName}>{p.period}</Text>
+                <Text
+                  style={styles.pName}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {p.period}
+                </Text>
                 <Text style={styles.pIcon}>
                   {getWeatherIcon(p.precipitation, p.period)}
                 </Text>
-                <Text style={styles.pTemp}>
+                <Text
+                  style={styles.pTemp}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
                   {p.temp > 0 ? `+${p.temp}` : p.temp}°
                 </Text>
-                <Text style={styles.pSub}>💨 {p.wind}</Text>
-                <Text style={styles.pSub}>☔ {p.precipitation} мм</Text>
+                <Text
+                  style={styles.pSub}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  💨 {p.wind}
+                </Text>
+                <Text
+                  style={styles.pSub}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ☔ {p.precipitation} мм
+                </Text>
               </View>
             ))}
           </View>
@@ -119,15 +149,37 @@ export default function WeatherBox({ cityName, weather, loading }) {
           <View style={styles.grid}>
             {tomorrowWeather?.periods?.map((p, i) => (
               <View key={i} style={styles.cell}>
-                <Text style={styles.pName}>{p.period}</Text>
+                <Text
+                  style={styles.pName}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {p.period}
+                </Text>
                 <Text style={styles.pIcon}>
                   {getWeatherIcon(p.precipitation, p.period)}
                 </Text>
-                <Text style={styles.pTemp}>
+                <Text
+                  style={styles.pTemp}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
                   {p.temp > 0 ? `+${p.temp}` : p.temp}°
                 </Text>
-                <Text style={styles.pSub}>💨 {p.wind}</Text>
-                <Text style={styles.pSub}>☔ {p.precipitation} мм</Text>
+                <Text
+                  style={styles.pSub}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  💨 {p.wind}
+                </Text>
+                <Text
+                  style={styles.pSub}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ☔ {p.precipitation} мм
+                </Text>
               </View>
             ))}
           </View>
@@ -139,7 +191,11 @@ export default function WeatherBox({ cityName, weather, loading }) {
               key={d.date || idx}
               style={[styles.dayRow, idx === 0 && { borderTopWidth: 0 }]}
             >
-              <Text style={styles.dayDate}>
+              <Text
+                style={styles.dayDate}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {idx === 0
                   ? "Сьогодні"
                   : idx === 1
@@ -149,15 +205,31 @@ export default function WeatherBox({ cityName, weather, loading }) {
               <View style={styles.miniRow}>
                 {d.periods?.map((p, pIdx) => (
                   <View key={pIdx} style={styles.miniCell}>
-                    <Text style={styles.miniLabel}>{p.period}</Text>
+                    <Text
+                      style={styles.miniLabel}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {p.period}
+                    </Text>
                     <Text style={styles.miniIcon}>
                       {getWeatherIcon(p.precipitation, p.period)}
                     </Text>
-                    <Text style={styles.miniTemp}>
+                    <Text
+                      style={styles.miniTemp}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
                       {p.temp > 0 ? `+${p.temp}` : p.temp}°
                     </Text>
                     {p.precipitation > 0 ? (
-                      <Text style={styles.miniRain}>☔{p.precipitation}</Text>
+                      <Text
+                        style={styles.miniRain}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        ☔{p.precipitation}
+                      </Text>
                     ) : null}
                   </View>
                 ))}
@@ -177,6 +249,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: "rgba(148, 163, 184, 0.25)",
+    overflow: "hidden",
   },
   header: {
     color: "#F8FAFC",
@@ -187,7 +260,9 @@ const styles = StyleSheet.create({
   tabsRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   tabBtn: {
     flex: 1,
+    minWidth: 0,
     paddingVertical: 9,
+    paddingHorizontal: 4,
     borderRadius: 8,
     backgroundColor: "rgba(30, 41, 59, 0.85)",
     alignItems: "center",
@@ -215,23 +290,41 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
   },
-  nowTemp: { color: "#F8FAFC", fontSize: 32, fontWeight: "bold" },
-  nowPeriod: { color: "#FFD700", fontSize: 17, fontWeight: "600" },
-  nowMeta: { color: "#CBD5E1", fontSize: 13, marginTop: 3 },
+  nowTemp: {
+    color: "#F8FAFC",
+    fontSize: 28,
+    fontWeight: "bold",
+    flexShrink: 0,
+  },
+  nowRight: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "flex-end",
+    marginLeft: 10,
+  },
+  nowPeriod: { color: "#FFD700", fontSize: 16, fontWeight: "600" },
+  nowMeta: {
+    color: "#CBD5E1",
+    fontSize: 12,
+    marginTop: 3,
+    textAlign: "right",
+    lineHeight: 17,
+  },
   dateSub: { color: "#CBD5E1", fontSize: 14, marginBottom: 8 },
   grid: { flexDirection: "row", justifyContent: "space-between", gap: 6 },
   cell: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: "rgba(30, 41, 59, 0.65)",
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
     alignItems: "center",
   },
   pName: { color: "#CBD5E1", fontSize: 13, fontWeight: "600", marginBottom: 4 },
   pIcon: { fontSize: 20, marginBottom: 3 },
-  pTemp: { color: "#F8FAFC", fontSize: 19, fontWeight: "bold" },
-  pSub: { color: "#94A3B8", fontSize: 12, marginTop: 3 },
+  pTemp: { color: "#F8FAFC", fontSize: 18, fontWeight: "bold" },
+  pSub: { color: "#94A3B8", fontSize: 11, marginTop: 3, textAlign: "center" },
   dayRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -240,20 +333,31 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(148, 163, 184, 0.15)",
   },
-  dayDate: { color: "#E2E8F0", fontSize: 15, fontWeight: "bold", width: "24%" },
+  dayDate: {
+    color: "#E2E8F0",
+    fontSize: 14,
+    fontWeight: "bold",
+    width: "24%",
+    paddingRight: 4,
+  },
   miniRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "74%",
+    width: "76%",
   },
-  miniCell: { alignItems: "center", flex: 1 },
-  miniLabel: { color: "#94A3B8", fontSize: 12 },
+  miniCell: {
+    alignItems: "center",
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 2,
+  },
+  miniLabel: { color: "#94A3B8", fontSize: 11 },
   miniIcon: { fontSize: 15, marginTop: 2 },
   miniTemp: {
     color: "#F8FAFC",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     marginTop: 2,
   },
-  miniRain: { color: "#38BDF8", fontSize: 11, marginTop: 1 },
+  miniRain: { color: "#38BDF8", fontSize: 10, marginTop: 1 },
 });

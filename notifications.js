@@ -3,9 +3,13 @@ import * as BackgroundFetch from "expo-background-fetch";
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
 import { Platform } from "react-native";
-import { fetchAppVersion, fetchSchedule, formatScheduleIntervals } from "./api";
+import {
+  fetchAppVersion,
+  fetchSchedule,
+  formatScheduleIntervals,
+  isNewerVersion,
+} from "./api";
 
-const CURRENT_VERSION = "1.0.0";
 const STORAGE_KEY = "@svet_odesa_settings_v1";
 const LAST_HASH_KEY = "@svet_odesa_last_schedule";
 const LAST_UPDATE_CHECK_KEY = "@svet_odesa_last_update_check";
@@ -81,7 +85,6 @@ export async function requestNotificationPermissions() {
   return status === "granted";
 }
 
-// Планируем напоминания за 15/30 минут до отключения и синхронизируем слепок графика
 export async function scheduleOutageReminders(scheduleData, settings) {
   if (Platform.OS === "web" || !scheduleData) return;
 
@@ -137,7 +140,6 @@ export async function scheduleOutageReminders(scheduleData, settings) {
   }
 }
 
-// Фоновая задача проверки изменений графика и обновлений приложения
 if (Platform.OS !== "web" && !TaskManager.isTaskDefined(BG_TASK_NAME)) {
   TaskManager.defineTask(BG_TASK_NAME, async () => {
     try {
@@ -196,20 +198,18 @@ if (Platform.OS !== "web" && !TaskManager.isTaskDefined(BG_TASK_NAME)) {
           await AsyncStorage.setItem(LAST_UPDATE_CHECK_KEY, String(now));
           const versionData = await fetchAppVersion();
 
-          if (versionData?.version && versionData.version !== CURRENT_VERSION) {
+          if (isNewerVersion(versionData)) {
             await AsyncStorage.setItem(
               PENDING_UPDATE_KEY,
               JSON.stringify(versionData),
             );
+            const versionTag = `${versionData.version || ""}_${versionData.buildNumber || ""}`;
             const lastNotified = await AsyncStorage.getItem(
               LAST_NOTIFIED_VERSION_KEY,
             );
 
-            if (lastNotified !== versionData.version) {
-              await AsyncStorage.setItem(
-                LAST_NOTIFIED_VERSION_KEY,
-                versionData.version,
-              );
+            if (lastNotified !== versionTag) {
+              await AsyncStorage.setItem(LAST_NOTIFIED_VERSION_KEY, versionTag);
               if (settings.notifyNight || !isNightTime(new Date())) {
                 await setupNotificationChannels();
                 await Notifications.scheduleNotificationAsync({

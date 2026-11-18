@@ -15,11 +15,14 @@ import {
   View,
 } from "react-native";
 import {
+  CURRENT_BUILD,
+  CURRENT_VERSION,
   fetchAppVersion,
   fetchCities,
   fetchSchedule,
   fetchWeather,
   formatScheduleIntervals,
+  isNewerVersion,
 } from "./api";
 import DisclaimerBox from "./components/DisclaimerBox";
 import SettingsMenu from "./components/SettingsMenu";
@@ -30,7 +33,6 @@ import {
   syncBackgroundTask,
 } from "./notifications";
 
-const CURRENT_VERSION = "1.0.0";
 const STORAGE_KEY = "@svet_odesa_settings_v1";
 const LAST_UPDATE_CHECK_KEY = "@svet_odesa_last_update_check";
 const PENDING_UPDATE_KEY = "@svet_odesa_pending_update";
@@ -105,10 +107,7 @@ export default function App() {
 
         if (rawPending) {
           const parsedUpdate = JSON.parse(rawPending);
-          if (
-            parsedUpdate?.version &&
-            parsedUpdate.version !== CURRENT_VERSION
-          ) {
+          if (isNewerVersion(parsedUpdate)) {
             setPendingUpdate(parsedUpdate);
           } else {
             AsyncStorage.removeItem(PENDING_UPDATE_KEY).catch(() => {});
@@ -140,7 +139,8 @@ export default function App() {
   };
 
   const showUpdatePrompt = (data) => {
-    const title = `Доступне оновлення (v${data.version})`;
+    const buildLabel = data.buildNumber ? ` #${data.buildNumber}` : "";
+    const title = `Доступне оновлення (v${data.version}${buildLabel})`;
     const body = `${
       data.notes || "Вийшла нова версія додатку."
     }\n\nВи можете завантажити оновлення зараз або оновити програму пізніше через меню чи кнопкою «Оновити» на головному екрані.`;
@@ -176,7 +176,7 @@ export default function App() {
         await AsyncStorage.setItem(LAST_UPDATE_CHECK_KEY, String(now));
         const data = await fetchAppVersion();
 
-        if (data?.version && data.version !== CURRENT_VERSION) {
+        if (isNewerVersion(data)) {
           setPendingUpdate(data);
           await AsyncStorage.setItem(PENDING_UPDATE_KEY, JSON.stringify(data));
           showUpdatePrompt(data);
@@ -260,14 +260,14 @@ export default function App() {
     try {
       await AsyncStorage.setItem(LAST_UPDATE_CHECK_KEY, String(Date.now()));
       const data = await fetchAppVersion();
-      if (data?.version && data.version !== CURRENT_VERSION) {
+      if (isNewerVersion(data)) {
         setPendingUpdate(data);
         await AsyncStorage.setItem(PENDING_UPDATE_KEY, JSON.stringify(data));
         showUpdatePrompt(data);
       } else {
         setPendingUpdate(null);
         await AsyncStorage.removeItem(PENDING_UPDATE_KEY);
-        const msg = `У вас встановлена актуальна версія додатку (v${CURRENT_VERSION}).`;
+        const msg = `У вас встановлена актуальна версія додатку (v${CURRENT_VERSION}, збірка #${CURRENT_BUILD}).`;
         if (Platform.OS === "web") {
           window.alert(msg);
         } else {
@@ -496,6 +496,7 @@ export default function App() {
           settings={settings}
           updateSettings={updateSettings}
           onCheckUpdate={handleCheckUpdate}
+          appVersion={`${CURRENT_VERSION} (збірка #${CURRENT_BUILD})`}
         />
       </SafeAreaView>
     </ImageBackground>

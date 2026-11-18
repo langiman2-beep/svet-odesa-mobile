@@ -1,9 +1,14 @@
+import appConfig from "./app.json";
+
+export const CURRENT_VERSION = appConfig.expo?.version || "1.0.1";
+export const CURRENT_BUILD = appConfig.expo?.android?.versionCode || 2;
+
 const BASE_URL = "https://svet.odesa.org.ua";
 const API_KEY = process.env.EXPO_PUBLIC_API_KEY || "";
 
 const headers = {
-  "Content-Type": "application/json",
-  "x-api-key": API_KEY,
+  Accept: "application/json",
+  ...(API_KEY ? { "x-api-key": API_KEY } : {}),
 };
 
 const STATUS_MAP = {
@@ -48,7 +53,7 @@ function splitHourToHalves(start, end, status) {
   const [firstHalf, secondHalf] = map[status] || ["unknown", "unknown"];
   return [
     { start, end: mid, status: firstHalf },
-    { start, mid, end, status: secondHalf },
+    { start: mid, end, status: secondHalf },
   ];
 }
 
@@ -77,6 +82,20 @@ export function formatScheduleIntervals(hourlyList) {
 function buildRow({ start, end, status }) {
   const meta = STATUS_MAP[status] || STATUS_MAP.unknown;
   return { time: `${start} – ${end}`, status, ...meta };
+}
+
+export function isNewerVersion(serverData) {
+  if (!serverData) return false;
+  if (
+    serverData.buildNumber &&
+    Number(serverData.buildNumber) > Number(CURRENT_BUILD)
+  ) {
+    return true;
+  }
+  if (serverData.version && serverData.version !== CURRENT_VERSION) {
+    return true;
+  }
+  return false;
 }
 
 async function safeFetch(url) {
