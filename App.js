@@ -8,6 +8,7 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -84,6 +85,7 @@ export default function App() {
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [justUpdated, setJustUpdated] = useState(false);
 
   const [pendingUpdate, setPendingUpdate] = useState(null);
 
@@ -224,14 +226,21 @@ export default function App() {
       .finally(() => setWeatherLoading(false));
   }, [activeCity.key, hydrated]);
 
-  const loadSchedule = async (targetGroup = settings.group) => {
+  const loadSchedule = async (
+    targetGroup = settings.group,
+    isManual = false,
+  ) => {
     setLoading(true);
     setError("");
     try {
       const data = await fetchSchedule(targetGroup);
       setScheduleData(data);
+      if (isManual) {
+        setJustUpdated(true);
+        setTimeout(() => setJustUpdated(false), 2000);
+      }
     } catch (e) {
-      setError(e.message || "Помилка зʼєднання з сервером");
+      setError("Немає інтернету");
     } finally {
       setLoading(false);
     }
@@ -239,7 +248,7 @@ export default function App() {
 
   useEffect(() => {
     if (!hydrated) return;
-    loadSchedule(settings.group);
+    loadSchedule(settings.group, false);
   }, [settings.group, hydrated]);
 
   useEffect(() => {
@@ -266,7 +275,7 @@ export default function App() {
         }
       }
     } catch (e) {
-      const errMsg = "Не вдалося перевірити оновлення. Спробуйте пізніше.";
+      const errMsg = "Немає інтернету";
       if (Platform.OS === "web") {
         window.alert(errMsg);
       } else {
@@ -401,8 +410,17 @@ export default function App() {
                 <Text style={styles.tableTitle}>
                   Графік • Група {settings.group}
                 </Text>
-                <TouchableOpacity onPress={() => loadSchedule(settings.group)}>
-                  <Text style={styles.refreshBtn}>🔄 Оновити</Text>
+                <TouchableOpacity
+                  onPress={() => loadSchedule(settings.group, true)}
+                >
+                  <Text
+                    style={[
+                      styles.refreshBtn,
+                      justUpdated && { color: "#22C55E" },
+                    ]}
+                  >
+                    {justUpdated ? "✅ Оновлено" : "🔄 Оновити"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -491,13 +509,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#0A0F1C",
   },
-  overlay: { flex: 1, backgroundColor: "rgba(10, 15, 28, 0.52)" },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(10, 15, 28, 0.52)",
+    paddingTop:
+      Platform.OS === "android" ? (StatusBar.currentHeight || 28) + 8 : 0,
+  },
   scroll: { flexGrow: 1, alignItems: "center", padding: 14, paddingBottom: 32 },
   container: { width: "100%", maxWidth: 430 },
   headerCard: {
     backgroundColor: "rgba(15, 23, 42, 0.84)",
     borderRadius: 16,
-    paddingVertical: 12,
+    paddingTop: 16,
+    paddingBottom: 12,
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: "rgba(255, 215, 0, 0.35)",
@@ -507,6 +531,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingTop: 4,
   },
   burgerBtn: {
     width: 40,

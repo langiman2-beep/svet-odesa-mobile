@@ -1,5 +1,5 @@
 const BASE_URL = "https://svet.odesa.org.ua";
-const API_KEY = "odesa_hren_vam_2026_a_ne_ataki_na_hosting";
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY || "";
 
 const headers = {
   "Content-Type": "application/json",
@@ -48,7 +48,7 @@ function splitHourToHalves(start, end, status) {
   const [firstHalf, secondHalf] = map[status] || ["unknown", "unknown"];
   return [
     { start, end: mid, status: firstHalf },
-    { start: mid, end, status: secondHalf },
+    { start, mid, end, status: secondHalf },
   ];
 }
 
@@ -79,32 +79,32 @@ function buildRow({ start, end, status }) {
   return { time: `${start} – ${end}`, status, ...meta };
 }
 
-export async function fetchCities() {
-  const res = await fetch(`${BASE_URL}/api/cities`, { headers });
-  if (!res.ok) throw new Error("Не вдалося завантажити список міст");
-  return res.json();
+async function safeFetch(url) {
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error("Немає інтернету");
+    return await res.json();
+  } catch {
+    throw new Error("Немає інтернету");
+  }
 }
 
-export async function fetchWeather(cityKey = "odesa") {
-  const res = await fetch(
+export function fetchCities() {
+  return safeFetch(`${BASE_URL}/api/cities`);
+}
+
+export function fetchWeather(cityKey = "odesa") {
+  return safeFetch(
     `${BASE_URL}/api/weather?city=${encodeURIComponent(cityKey)}`,
-    { headers },
   );
-  if (!res.ok) throw new Error("Помилка завантаження погоди");
-  return res.json();
 }
 
-export async function fetchSchedule(group = "1.1") {
-  const res = await fetch(
+export function fetchSchedule(group = "1.1") {
+  return safeFetch(
     `${BASE_URL}/api/schedule?group=${encodeURIComponent(group)}`,
-    { headers },
   );
-  if (!res.ok) throw new Error("Помилка завантаження графіка");
-  return res.json();
 }
 
-export async function fetchAppVersion() {
-  const res = await fetch(`${BASE_URL}/api/version`, { headers });
-  if (!res.ok) throw new Error("Не вдалося перевірити оновлення");
-  return res.json();
+export function fetchAppVersion() {
+  return safeFetch(`${BASE_URL}/api/version`);
 }

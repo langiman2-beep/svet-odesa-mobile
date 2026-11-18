@@ -131,7 +131,7 @@ export async function scheduleOutageReminders(scheduleData, settings) {
           body: `Група ${settings.group}: світло вимкнуть о ${startStr}`,
           sound: settings.sound ? "default" : false,
         },
-        trigger: { date: triggerTime, channelId },
+        trigger: { type: "date", date: triggerTime, channelId },
       });
     }
   }
@@ -165,7 +165,6 @@ if (Platform.OS !== "web" && !TaskManager.isTaskDefined(BG_TASK_NAME)) {
       ) {
         try {
           const parsedOld = JSON.parse(oldSignature);
-          // Шлём пуш только если группа та же самая, а расписание внутри неё изменилось
           if (parsedOld.group === settings.group) {
             if (settings.notifyNight || !isNightTime(new Date())) {
               await setupNotificationChannels();
@@ -175,7 +174,11 @@ if (Platform.OS !== "web" && !TaskManager.isTaskDefined(BG_TASK_NAME)) {
                   body: `Для групи ${settings.group} зʼявилися зміни. Заглянь у додаток.`,
                   sound: settings.sound ? "default" : false,
                 },
-                trigger: { seconds: 1, channelId: getChannelId(settings) },
+                trigger: {
+                  type: "timeInterval",
+                  seconds: 1,
+                  channelId: getChannelId(settings),
+                },
               });
             }
             hasNewData = true;
@@ -215,7 +218,11 @@ if (Platform.OS !== "web" && !TaskManager.isTaskDefined(BG_TASK_NAME)) {
                     body: "Вийшла нова версія додатку. Відкрийте програму, щоб завантажити.",
                     sound: settings.sound ? "default" : false,
                   },
-                  trigger: { seconds: 1, channelId: getChannelId(settings) },
+                  trigger: {
+                    type: "timeInterval",
+                    seconds: 1,
+                    channelId: getChannelId(settings),
+                  },
                 });
               }
               hasNewData = true;
