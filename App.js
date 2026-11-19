@@ -28,6 +28,7 @@ import DisclaimerBox from "./components/DisclaimerBox";
 import SettingsMenu from "./components/SettingsMenu";
 import WeatherBox from "./components/WeatherBox";
 import {
+  openBatterySettings,
   requestNotificationPermissions,
   scheduleOutageReminders,
   syncBackgroundTask,
@@ -36,6 +37,7 @@ import {
 const STORAGE_KEY = "@svet_odesa_settings_v1";
 const LAST_UPDATE_CHECK_KEY = "@svet_odesa_last_update_check";
 const PENDING_UPDATE_KEY = "@svet_odesa_pending_update";
+const BG_NOTICE_SHOWN_KEY = "@svet_odesa_bg_notice_v4";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const GROUPS = [
@@ -78,6 +80,7 @@ export default function App() {
   const [cities, setCities] = useState(DEFAULT_CITIES);
   const [firstLaunchModal, setFirstLaunchModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bgNoticeModal, setBgNoticeModal] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
 
   const [tab, setTab] = useState("today");
@@ -123,6 +126,28 @@ export default function App() {
     requestNotificationPermissions();
     syncBackgroundTask(settings.bgUpdates);
   }, [hydrated, settings.bgUpdates]);
+
+  useEffect(() => {
+    if (!hydrated || firstLaunchModal || Platform.OS !== "android") return;
+
+    AsyncStorage.getItem(BG_NOTICE_SHOWN_KEY)
+      .then((seen) => {
+        if (!seen) {
+          setBgNoticeModal(true);
+        }
+      })
+      .catch(() => {});
+  }, [hydrated, firstLaunchModal]);
+
+  const handleCloseBgNotice = () => {
+    setBgNoticeModal(false);
+    AsyncStorage.setItem(BG_NOTICE_SHOWN_KEY, "1").catch(() => {});
+  };
+
+  const handleOpenBgNoticeFromMenu = () => {
+    setMenuOpen(false);
+    setBgNoticeModal(true);
+  };
 
   const startDownloadUpdate = (downloadUrl) => {
     if (!downloadUrl) return;
@@ -497,6 +522,10 @@ export default function App() {
           updateSettings={updateSettings}
           onCheckUpdate={handleCheckUpdate}
           appVersion={`${CURRENT_VERSION} (збірка #${CURRENT_BUILD})`}
+          bgNoticeModal={bgNoticeModal}
+          onCloseBgNotice={handleCloseBgNotice}
+          onOpenBgNotice={handleOpenBgNoticeFromMenu}
+          onOpenBatterySettings={openBatterySettings}
         />
       </SafeAreaView>
     </ImageBackground>

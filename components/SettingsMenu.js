@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -20,6 +21,10 @@ export default function SettingsMenu({
   updateSettings,
   onCheckUpdate,
   appVersion,
+  bgNoticeModal,
+  onCloseBgNotice,
+  onOpenBgNotice,
+  onOpenBatterySettings,
 }) {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -221,6 +226,23 @@ export default function SettingsMenu({
                 />
               </View>
 
+              {Platform.OS === "android" && (
+                <TouchableOpacity
+                  style={styles.bgHelperBtn}
+                  onPress={() => {
+                    setCityPickerOpen(false);
+                    onOpenBgNotice();
+                  }}
+                >
+                  <Text style={styles.bgHelperBtnText}>
+                    🔔 Стабільна робота у фоні
+                  </Text>
+                  <Text style={styles.bgHelperSubText}>
+                    Щоб сповіщення приходили вчасно на будь-якому телефоні
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={styles.updateBtn}
                 onPress={onCheckUpdate}
@@ -238,6 +260,67 @@ export default function SettingsMenu({
                 onPress={() => setAboutOpen(true)}
               >
                 <Text style={styles.aboutBtnText}>ℹ️ Про програму</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Мягкое окно про фоновую работу (после обновления или из меню) */}
+      <Modal visible={bgNoticeModal} transparent animationType="fade">
+        <View style={styles.backdrop}>
+          <View style={styles.aboutBox}>
+            <View style={styles.menuHeader}>
+              <Text style={styles.title}>🔔 Стабільні сповіщення</Text>
+              <TouchableOpacity
+                style={styles.closeWrap}
+                onPress={onCloseBgNotice}
+              >
+                <Text style={styles.closeBtn}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.legalText}>
+                У новому оновленні покращено фонове оновлення графіків з
+                урахуванням особливостей як нових, так і старіших смартфонів.
+              </Text>
+
+              <Text style={styles.legalText}>
+                Не всі телефони однаково підтримують фонові запити — система
+                іноді призупиняє додатки у сплячому режимі (особливо на Xiaomi,
+                Redmi та Poco), через що нагадування можуть затримуватись.
+              </Text>
+
+              <Text style={styles.legalText}>
+                Щоб графік оновлювався вчасно, можна дозволити додатку спокійно
+                працювати у фоні. Це майже не впливає на заряд телефону —
+                програма лише зрідка перевіряє розклад.
+              </Text>
+
+              <Text style={styles.bgHintNote}>
+                💡 Якщо після натискання відкриється системне вікно — просто
+                оберіть «Дозволити» (або «Без обмежень» у розділі фонової
+                активності).
+              </Text>
+
+              <TouchableOpacity
+                style={styles.aboutCloseMainBtn}
+                onPress={() => {
+                  onCloseBgNotice();
+                  onOpenBatterySettings();
+                }}
+              >
+                <Text style={styles.aboutCloseMainText}>
+                  ⚙️ Дозволити роботу у фоні
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.bgSkipBtn}
+                onPress={onCloseBgNotice}
+              >
+                <Text style={styles.bgSkipBtnText}>Зрозуміло, пізніше</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -454,8 +537,49 @@ const styles = StyleSheet.create({
   },
   switchTitle: { color: "#F8FAFC", fontSize: 17, fontWeight: "600" },
   switchHint: { color: "#94A3B8", fontSize: 13, marginTop: 3, lineHeight: 17 },
+  bgHelperBtn: {
+    marginTop: 14,
+    backgroundColor: "rgba(56, 189, 248, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.55)",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    alignItems: "center",
+  },
+  bgHelperBtnText: { color: "#38BDF8", fontSize: 16, fontWeight: "bold" },
+  bgHelperSubText: {
+    color: "#CBD5E1",
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  bgHintNote: {
+    color: "#FDE047",
+    fontSize: 14,
+    lineHeight: 20,
+    backgroundColor: "rgba(234, 179, 8, 0.12)",
+    borderColor: "rgba(234, 179, 8, 0.4)",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+  },
+  bgSkipBtn: {
+    marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#1E293B",
+    alignItems: "center",
+  },
+  bgSkipBtnText: {
+    color: "#CBD5E1",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   updateBtn: {
-    marginTop: 20,
+    marginTop: 14,
     backgroundColor: "rgba(255, 215, 0, 0.18)",
     borderWidth: 1.5,
     borderColor: "#FFD700",

@@ -1,14 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as BackgroundFetch from "expo-background-fetch";
+import * as IntentLauncher from "expo-intent-launcher";
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import {
   fetchAppVersion,
   fetchSchedule,
   formatScheduleIntervals,
   isNewerVersion,
 } from "./api";
+import appConfig from "./app.json";
 
 const STORAGE_KEY = "@svet_odesa_settings_v1";
 const LAST_HASH_KEY = "@svet_odesa_last_schedule";
@@ -34,10 +36,10 @@ function isNightTime(date = new Date()) {
 }
 
 function getChannelId(settings) {
-  if (settings.sound && settings.vibrate) return "svet_sound_vibro";
-  if (settings.sound && !settings.vibrate) return "svet_sound_only";
-  if (!settings.sound && settings.vibrate) return "svet_vibro_only";
-  return "svet_silent";
+  if (settings.sound && settings.vibrate) return "svet_sound_vibro_v2";
+  if (settings.sound && !settings.vibrate) return "svet_sound_only_v2";
+  if (!settings.sound && settings.vibrate) return "svet_vibro_only_v2";
+  return "svet_silent_v2";
 }
 
 function buildScheduleSignature(group, scheduleData) {
@@ -50,27 +52,33 @@ function buildScheduleSignature(group, scheduleData) {
 
 export async function setupNotificationChannels() {
   if (Platform.OS !== "android") return;
-  await Notifications.setNotificationChannelAsync("svet_sound_vibro", {
+  await Notifications.setNotificationChannelAsync("svet_sound_vibro_v2", {
     name: "Світло (Звук + Вібро)",
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: Notifications.AndroidImportance.MAX,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     sound: "default",
     enableVibrate: true,
+    vibrationPattern: [0, 250, 250, 250],
   });
-  await Notifications.setNotificationChannelAsync("svet_sound_only", {
+  await Notifications.setNotificationChannelAsync("svet_sound_only_v2", {
     name: "Світло (Тільки звук)",
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: Notifications.AndroidImportance.MAX,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     sound: "default",
     enableVibrate: false,
   });
-  await Notifications.setNotificationChannelAsync("svet_vibro_only", {
+  await Notifications.setNotificationChannelAsync("svet_vibro_only_v2", {
     name: "Світло (Тільки вібро)",
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: Notifications.AndroidImportance.MAX,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     sound: null,
     enableVibrate: true,
+    vibrationPattern: [0, 250, 250, 250],
   });
-  await Notifications.setNotificationChannelAsync("svet_silent", {
+  await Notifications.setNotificationChannelAsync("svet_silent_v2", {
     name: "Світло (Без звуку)",
     importance: Notifications.AndroidImportance.DEFAULT,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     sound: null,
     enableVibrate: false,
   });
@@ -87,6 +95,8 @@ export async function requestNotificationPermissions() {
 
 export async function scheduleOutageReminders(scheduleData, settings) {
   if (Platform.OS === "web" || !scheduleData) return;
+
+  await setupNotificationChannels();
 
   try {
     const sig = buildScheduleSignature(settings.group, scheduleData);
@@ -256,4 +266,25 @@ export async function syncBackgroundTask(enabled) {
       await BackgroundFetch.unregisterTaskAsync(BG_TASK_NAME);
     }
   } catch {}
+}
+
+export async function openBatterySettings() {
+  if (Platform.OS !== "android") return;
+  const pkg = appConfig.expo?.android?.package || "com.langust.svet_mobile";
+
+  try {
+    await IntentLauncher.startActivityAsync(
+      "android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+      { data: `package:${pkg}` },
+    );
+  } catch {
+    try {
+      await IntentLauncher.startActivityAsync(
+        "android.settings.APPLICATION_DETAILS_SETTINGS",
+        { data: `package:${pkg}` },
+      );
+    } catch {
+      Linking.openSettings().catch(() => {});
+    }
+  }
 }
